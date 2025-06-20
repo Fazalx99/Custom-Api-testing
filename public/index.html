@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore API Client</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">Bookstore API Client</h1>
+        
+        <!-- Add Book Form -->
+        <div class="mb-6 p-4 bg-white rounded shadow">
+            <h2 class="text-xl font-semibold mb-2">Add New Book</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <input id="title" type="text" placeholder="Title" class="p-2 border rounded">
+                <input id="author" type="text" placeholder="Author" class="p-2 border rounded">
+                <input id="year" type="number" placeholder="Year" class="p-2 border rounded">
+                <input id="genre" type="text" placeholder="Genre" class="p-2 border rounded">
+                <button onclick="addBook()" class="col-span-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Add Book</button>
+            </div>
+        </div>
+
+        <!-- Books List -->
+        <div id="books-list" class="grid gap-4"></div>
+    </div>
+
+    <script>
+        async function fetchBooks() {
+            const response = await fetch('/api/books');
+            const books = await response.json();
+            const booksList = document.getElementById('books-list');
+            booksList.innerHTML = '';
+            books.forEach(book => {
+                const bookElement = document.createElement('div');
+                bookElement.className = 'p-4 bg-white rounded shadow';
+                bookElement.innerHTML = `
+                    <h3 class="text-lg font-semibold">${book.title}</h3>
+                    <p>Author: ${book.author}</p>
+                    <p>Year: ${book.year}</p>
+                    <p>Genre: ${book.genre}</p>
+                    <button onclick="editBook('${book._id}')" class="bg-yellow-500 text-white p-1 rounded mr-2">Edit</button>
+                    <button onclick="deleteBook('${book._id}')" class="bg-red-500 text-white p-1 rounded">Delete</button>
+                `;
+                booksList.appendChild(bookElement);
+            });
+        }
+
+        async function addBook() {
+            const book = {
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                year: parseInt(document.getElementById('year').value),
+                genre: document.getElementById('genre').value
+            };
+            await fetch('/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(book)
+            });
+            fetchBooks();
+            clearForm();
+        }
+
+        async function editBook(id) {
+            const book = {
+                title: prompt('Enter new title'),
+                author: prompt('Enter new author'),
+                year: parseInt(prompt('Enter new year')),
+                genre: prompt('Enter new genre')
+            };
+            await fetch(`/api/books/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(book)
+            });
+            fetchBooks();
+        }
+
+        async function deleteBook(id) {
+            await fetch(`/api/books/${id}`, {
+                method: 'DELETE'
+            });
+            fetchBooks();
+        }
+
+        function clearForm() {
+            document.getElementById('title').value = '';
+            document.getElementById('author').value = '';
+            document.getElementById('year').value = '';
+            document.getElementById('genre').value = '';
+        }
+
+        // Initial fetch
+        fetchBooks();
+    </script>
+</body>
+</html>
